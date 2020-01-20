@@ -12,6 +12,7 @@ default_source :supermarket
 # run_list: chef-client will run these recipes in the order specified.
 run_list 'secrets_test::default'
 named_run_list :azure, 'secrets_test::azure'
+named_run_list :aws, 'secrets_test::aws'
 
 # Specify a custom source for a single cookbook:
 cookbook 'secrets_test', path: './test/cookbooks/secrets_test'

@@ -6,12 +6,14 @@ This is a refactoring of [azure_keyvault cookbook](https://github.com/kriszentne
 
 A `kitchen.azure.yml` file has been added with Lifecycle Hooks which create an Azure Key Vault for testing purposes.
 
-It is intended to add example libraries for other secrets management tools such as AWS KMS.
+It is intended to add example libraries for other secrets management tools, initially also AWS Secrets Manager.
+
+A `kitchen.aws.yml` file has been added with Lifecycle Hooks which create a secret in AWS Secrets Manager for testing purposes, with example IAM instance profile creation.
 
 ## Azure Requirements
 
 * **Create an Azure Key Vault:** You'll need to create a vault in Azure. Either in the [portal](https://docs.microsoft.com/en-us/azure/key-vault/quick-create-portal) or [CLI](https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2). I recommend creating a vault just for your Chef secrets, instead of reusing one being used for other purposes.
-* **Create a principal to access your Vault:** You'll need to create an Azure principal or Identity 
+* **Create a principal to access your Vault:** You'll need to create an Azure principal or Identity
  and provide permissions to it. (see below)
 
 ## Azure Credentials
@@ -32,7 +34,7 @@ to be available to the node. Since it's bad practice to store credentials in cod
 
 # Helpers
 
-## akv_vault_secret
+## akv_get_secret
 
 This helper will allow you to retrieve a secret from an azure keyvault. If you don't provide an spn, `akv_get_secret` will assume you're using an Managed Service Identity.
 
@@ -43,11 +45,26 @@ spn = {
   'secret' => 'your-client-secret'
 }
 
-super_secret = akv_get_secret(<vault_name>, <secret_name>, spn)
+# Write the secret to a file:
+file '/etc/config_file' do
+  content lazy { "password = #{akv_get_secret(<vault_name>, <secret_name>, spn)}" }
+end
+```
+
+## get_aws_secret
+
+This helper will allow you to retrieve a secret from AWS Secrets Manager. It assumes the EC2 instance has an IAM instance profile that allows it access.
+
+```ruby
+spn = {
+  'tenant_id' => '11e34-your-tenant-id-1232',
+  'client_id' => '11e34-your-client-id-1232',
+  'secret' => 'your-client-secret'
+}
 
 # Write the secret to a file:
 file '/etc/config_file' do
-  content "password = #{super_secret}"
+  content lazy { "password = #{get_aws_secret(<secret_name>, <region_name>)}" }
 end
 ```
 

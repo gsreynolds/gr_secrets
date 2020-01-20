@@ -24,9 +24,7 @@ platforms:
   - name: ubuntu-18.04
 
 suites:
-  - name: azure
-    provisioner:
-      named_run_list: azure
+  - name: default
     verifier:
       inspec_tests:
         - test/integration/default

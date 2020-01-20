@@ -37,6 +37,8 @@ ENV["RGNAME"] = "kitchen-#{ENV['USER']}-secrets"
   
   platforms:
     - name: az-ubuntu-18.04
+      provisioner:
+        named_run_list: azure
       attributes:
         secrets_test:
           vault: <%= ENV["VAULTNAME"] %>
