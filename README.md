@@ -1,10 +1,14 @@
-# Azure Key Vault Chef Cookbook
+# Secrets Management Chef Cookbook
 
 # Description
 
-This is a fork of the [azure-cookbook](https://github.com/chef-partners/azure-cookbook), paired down to only support Azure Key Vault (AKV). This reduces dependancies, making the cookbook easier to support and forces it to do one thing well. This cookbook allows Chef users the option to use Azure Key Vault as a main secret store instead of Chef encrypted data bags. The library has also been refactored to use the official [Azure SDK for Ruby](https://github.com/Azure/azure-sdk-for-ruby).
+This is a refactoring of [azure_keyvault cookbook](https://github.com/kriszentner/azure_keyvault). This cookbook allows Chef users the option to use Azure Key Vault as a main secret store instead of Chef encrypted data bags.
 
-# Requirements
+A `kitchen.azure.yml` file has been added with Lifecycle Hooks which create an Azure Key Vault for testing purposes.
+
+It is intended to add example libraries for other secrets management tools such as AWS KMS.
+
+## Azure Requirements
 
 * **Create an Azure Key Vault:** You'll need to create a vault in Azure. Either in the [portal](https://docs.microsoft.com/en-us/azure/key-vault/quick-create-portal) or [CLI](https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2). I recommend creating a vault just for your Chef secrets, instead of reusing one being used for other purposes.
 * **Create a principal to access your Vault:** You'll need to create an Azure principal or Identity 
@@ -18,32 +22,13 @@ This is a fork of the [azure-cookbook](https://github.com/chef-partners/azure-co
   * Once created, you'll need a programatic way to [assign the VM access](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/howto-assign-access-portal) to your Azure Key Vault resource
 * [A service principal](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal) which can be [created with the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest)
 
-You'll need to ensure that appropriate permissions are granted to your Keyvault once created.
-
-I've created a short tutorial on this subject [here](https://github.com/kriszentner/technotes/blob/master/Azure/create_keyvault_with_sp.md):
+You'll need to ensure that appropriate permissions are granted to your Keyvault once created. [Short tutorial on this subject](https://github.com/kriszentner/technotes/blob/master/Azure/create_keyvault_with_sp.md):
 
 
 In order to access the Azure Key Vault via Service Principal, authentication credentials need
 to be available to the node. Since it's bad practice to store credentials in code (such as directly in an attribute, or recipe), I suggest either:
 * Storing the secret in a Chef encrypted data bag
 * Storing the secret in a protected file much like the Chef `encrypted_data_bag_secret` file used to access Chef encrypted data bags.
-
-# Recipes
-
-## default.rb
-
-The default recipe installs the `azure` Ruby gem, which this cookbook
-requires in order to work with the Azure API. Make sure that the
-azure_keyvault recipe is in the node or role `run_list` before any
-resources from this cookbook are used.
-
-    "run_list": [
-      "recipe[azure_keyvault]"
-    ]
-
-The `gem_package` is created as a Ruby Object and thus installed
-during the Compile Phase of the Chef run.
-
 
 # Helpers
 
@@ -65,8 +50,6 @@ file '/etc/config_file' do
   content "password = #{super_secret}"
 end
 ```
-
-
 
 License and Author
 ==================
