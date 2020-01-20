@@ -1,6 +1,6 @@
-# secrets CHANGELOG
+# gr_secrets CHANGELOG
 
-This file is used to list changes made in each version of the secrets cookbook.
+This file is used to list changes made in each version of the gr_secrets cookbook.
 
 # 0.1.0
 

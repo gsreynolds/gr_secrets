@@ -4,7 +4,7 @@
 # https://docs.chef.io/policyfile.html
 
 # A name that describes what the system you're building with Chef does.
-name 'secrets'
+name 'gr_secrets'
 
 # Where to find external cookbooks:
 default_source :supermarket
