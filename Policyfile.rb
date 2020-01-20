@@ -14,3 +14,4 @@ run_list 'secrets_test::default'
 
 # Specify a custom source for a single cookbook:
 cookbook 'secrets_test', path: './test/cookbooks/secrets_test'
+cookbook 'gr_secrets', path: '.'
