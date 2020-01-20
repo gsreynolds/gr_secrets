@@ -10,7 +10,8 @@ name 'secrets'
 default_source :supermarket
 
 # run_list: chef-client will run these recipes in the order specified.
-run_list 'secrets::default'
+run_list 'secrets_test::default'
 
 # Specify a custom source for a single cookbook:
+cookbook 'secrets_test', path: './test/cookbooks/secrets_test'
 cookbook 'secrets', path: '.'
