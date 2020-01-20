@@ -1,5 +1,5 @@
 <%
-ENV["VAULTNAME"] = "kitchen-secrets-test"
+ENV["VAULTNAME"] = "#{ENV['USER']}-vault"
 ENV["LOCATION"] = "northeurope"
 ENV["RGNAME"] = "kitchen-#{ENV['USER']}-secrets"
 %>
@@ -36,6 +36,9 @@ ENV["RGNAME"] = "kitchen-#{ENV['USER']}-secrets"
   
   platforms:
     - name: az-ubuntu-18.04
+      attributes:
+        secrets_test:
+          vault: <%= ENV["VAULTNAME"] %>
       driver:
         image_urn: Canonical:UbuntuServer:18.04-LTS:latest
         system_assigned_identity: true
