@@ -6,7 +6,7 @@ description 'Installs/Configures secrets'
 version '0.1.0'
 chef_version '>= 14.0'
 
-# gem 'azure_key_vault', '= 0.17.0'
+gem 'azure_key_vault'
 
 # The `issues_url` points to the location where issues for this cookbook are
 # tracked.  A `View Issues` link will be displayed on this cookbook's page when

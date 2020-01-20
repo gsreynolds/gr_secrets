@@ -25,6 +25,7 @@ ENV["RGNAME"] = "kitchen-#{ENV['USER']}-secrets"
       - az keyvault secret set --vault-name $VAULTNAME --name "test-secret" --value "test1234"
     post_create:
       - az keyvault set-policy --name $VAULTNAME --resource-group $RGNAME --secret-permissions get list --object-id $(az vm identity show -g $RGNAME -n xenial-vm | jq -r '.principalId')
+      - remote: sudo apt update && sudo apt install -y build-essential
   
   driver_config:
     subscription_id: <%= ENV["AZURE_SUBSCRIPTION_ID"] %>
