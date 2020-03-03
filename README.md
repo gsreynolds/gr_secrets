@@ -36,8 +36,9 @@ to be available to the node. Since it's bad practice to store credentials in cod
 
 ## akv_get_secret
 
-This helper will allow you to retrieve a secret from an azure keyvault. If you don't provide an spn, `akv_get_secret` will assume you're using an Managed Service Identity.
+This helper will allow you to retrieve a secret from an azure keyvault.
 
+### Using SPN:
 ```ruby
 spn = {
   'tenant_id' => '11e34-your-tenant-id-1232',
@@ -47,7 +48,36 @@ spn = {
 
 # Write the secret to a file:
 file '/etc/config_file' do
-  content lazy { "password = #{akv_get_secret(<vault_name>, <secret_name>, spn)}" }
+  content lazy { "password = #{akv_get_secret(vault: <vault_name>, secret: <secret_name>, spn: spn)}" }
+end
+```
+
+### Using system-assigned Managed Identity:
+If you don't provide an spn, `akv_get_secret` will assume you're using an Managed Service Identity.
+```ruby
+# Write the secret to a file:
+file '/etc/config_file' do
+  content lazy { "password = #{akv_get_secret(vault: <vault_name>, secret: <secret_name>)}" }
+end
+```
+
+### Using user-assigned Managed Identity:
+When using a user-assigned Managed Identity only one of `client_id`, `object_id` or `msi_res_id` must be provided.
+
+```ruby
+user_assigned_msi = {
+  'client_id' => '11e34-your-client-id-1232'
+}
+# user_assigned_msi = {
+#   'object_id' => '11e34-your-object-id-1232'
+# }
+# user_assigned_msi = {
+#   'msi_res_id' => '11e34-your-msi-res-id-1232'
+# }
+
+# Write the secret to a file:
+file '/etc/config_file' do
+  content lazy { "password = #{akv_get_secret(vault: <vault_name>, secret: <secret_name>, user_assigned_msi: user_assigned_msi)}" }
 end
 ```
 
