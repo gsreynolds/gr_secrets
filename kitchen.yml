@@ -1,8 +1,9 @@
 <%
-ENV["REGION"] = "eu-west-1"
-ENV["VAULTNAME"] = "#{ENV['USER']}-vault"
-ENV["LOCATION"] = "northeurope"
-ENV["RGNAME"] = "kitchen-#{ENV['USER']}-secrets"
+ENV["REGION"] ||= "eu-west-1"
+ENV["VAULTNAME"] ||= "#{ENV['USER']}-vault"
+ENV["LOCATION"] ||= "northeurope"
+ENV["RGNAME"] ||= "kitchen-#{ENV['USER']}-secrets"
+ENV["SPN_NAME"] ||= ENV['USER']
 %>
 ---
 driver:
@@ -41,6 +42,8 @@ platforms:
       machine_size: 'Standard_D2s_v3'
       image_urn: Canonical:UbuntuServer:18.04-LTS:latest
       system_assigned_identity: true
+      # user_assigned_identities:
+      #   - <%= `az identity show --name $VAULTNAME-identity --resource-group $RGNAME| jq -r '.id'` %>
   - name: aws-ubuntu-18.04
     driver:
       name: ec2
@@ -70,13 +73,24 @@ suites:
         - echo <%= ENV["RGNAME"] %>
         - echo <%= ENV["LOCATION"] %>
         - echo <%= ENV["VAULTNAME"] %>
+        # Pre-create the resource group
         - az group create -n <%= ENV["RGNAME"] %> -l <%= ENV["LOCATION"] %>
+        # Create a key vault and create a secret in the vault
         - az provider register -n Microsoft.KeyVault
         - az keyvault create --name <%= ENV["VAULTNAME"] %> --resource-group <%= ENV["RGNAME"] %> --location <%= ENV["LOCATION"] %>
         - az keyvault secret set --vault-name <%= ENV["VAULTNAME"] %> --name "test-secret" --value "test1234"
+        # Create a user-assigned managed identity
+        - az identity create -g <%= ENV["RGNAME"] %> -n <%= ENV["VAULTNAME"] %>-identity
+        # Grant the user-assigned managed identity access to the vault
+        - az keyvault set-policy --name <%= ENV["VAULTNAME"] %> --resource-group <%= ENV["RGNAME"] %> --secret-permissions get list --object-id $(az identity show --name <%= ENV["VAULTNAME"] %>-identity --resource-group <%= ENV["RGNAME"] %> | jq -r '.principalId')
+        # Grant the specified SPN access to the vault
+        - az keyvault set-policy --name <%= ENV["VAULTNAME"] %> --resource-group <%= ENV["RGNAME"] %> --secret-permissions get list --object-id $(az ad sp list --display-name "<%= ENV["SPN_NAME"] %>" | jq -r '. | first | .objectId')
       post_create:
+        # Add the user-assigned managed identity to the VM
+        - az vm identity assign -g <%= ENV["RGNAME"] %> -n xenial-vm --identities $(az identity show --name <%= ENV["VAULTNAME"] %>-identity --resource-group <%= ENV["RGNAME"] %> | jq -r '.id')
+        # Grant the VM system-assigned managed identity access to the vault
         - az keyvault set-policy --name <%= ENV["VAULTNAME"] %> --resource-group <%= ENV["RGNAME"] %> --secret-permissions get list --object-id $(az vm identity show -g <%= ENV["RGNAME"] %> -n xenial-vm | jq -r '.principalId')
-        - remote: sudo apt update && sudo apt install -y build-essential
+        - remote: export DEBIAN_FRONTEND=noninteractive && sudo apt update && sudo apt install -y build-essential
     verifier:
       inspec_tests:
         - test/integration/default
