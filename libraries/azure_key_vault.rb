@@ -9,15 +9,14 @@ module Azure
       secret_name = options.fetch(:secret, '')
       spn = coerce_hash(options.fetch(:spn, {}))
       user_assigned_msi = coerce_hash(options.fetch(:user_assigned_msi, {}))
-      secret_version = options.fetch(:secret_version, nil)
+      secret_version = options.fetch(:secret_version, '')
+      secret_version = '' if secret_version.nil?
 
       raise 'Vault name not provided' if vault.empty? || vault.nil?
       raise 'Secret name not provided' if secret_name.empty? || secret_name.nil?
 
       vault_url = "https://#{vault}.vault.azure.net"
-      if secret_version.nil?
-        secret_version = ''
-      end
+
       token_provider = create_token_credentials(spn, user_assigned_msi)
       credentials = MsRest::TokenCredentials.new(token_provider)
       client = Azure::KeyVault::V7_0::KeyVaultClient.new(credentials)
