@@ -2,7 +2,9 @@
 
 # Description
 
-This is a refactoring of [azure_keyvault cookbook](https://github.com/kriszentner/azure_keyvault). This cookbook allows Chef users the option to use Azure Key Vault as a main secret store instead of Chef encrypted data bags.
+This is an example of using other secrets management tools instead of Chef encrypted data bags or Chef Vault.
+
+For Azure, I've forked the [azure_keyvault cookbook](https://github.com/kriszentner/azure_keyvault) to [azure_keyvault cookbook](https://github.com/gsreynolds/azure_keyvault).
 
 A `kitchen.azure.yml` file has been added with Lifecycle Hooks which create an Azure Key Vault for testing purposes.
 
