@@ -1,16 +1,19 @@
 # https://docs.microsoft.com/en-gb/azure/active-directory/managed-identities-azure-resources/overview
 
+vault = node['secrets_test']['vault']
+secret = 'test-secret'
+
 # Using the system-assigned managed identity for the VM, that has been permitted access to the Key Vault
 # Write the secret to a file:
 file '/etc/config_file' do
-  content lazy { "password = #{akv_get_secret(node['secrets_test']['vault'], 'test-secret')}" }
+  content lazy { "password = #{akv_get_secret(vault: vault, secret: secret)}" }
 end
 
 # # Using a user-assigned managed identity that is permitted access to the Key Vault, added to the VM
-# user_assigned_msi = { 'client_id': '551c07b7-10f5-4623-bfa2-2b4ff6e6ba05' }
+# # user_assigned_msi = { 'client_id': '551c07b7-10f5-4623-bfa2-2b4ff6e6ba05' }
 # user_assigned_msi = { 'object_id': 'e0af322e-87ef-4631-addf-c1e65b50293e' }
 # file '/etc/config_file_user_assigned_msi' do
-#   content lazy { "password = #{akv_get_secret(node['secrets_test']['vault'], 'test-secret', {}, user_assigned_msi)}" }
+#   content lazy { "password = #{akv_get_secret(vault: vault, secret: secret, user_assigned_msi: user_assigned_msi)}" }
 # end
 
 # # Use a service principal, that has been permitted access to the Key Vault
@@ -22,5 +25,5 @@ end
 
 # # Write the secret to a file:
 # file '/etc/config_file_spn' do
-#   content lazy { "password = #{akv_get_secret(node['secrets_test']['vault'], 'test-secret', spn_data_bag.to_h)}" }
+#   content lazy { "password = #{akv_get_secret(vault: vault, secret: secret, spn: spn_data_bag.to_h)}" }
 # end

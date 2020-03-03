@@ -2,8 +2,17 @@
 
 module Azure
   module KeyVault
-    def akv_get_secret(vault, secret_name, spn = {}, user_assigned_msi = {}, secret_version = nil)
+    def akv_get_secret(options = {})
       require 'azure_key_vault'
+
+      vault = options.fetch(:vault, '')
+      secret_name = options.fetch(:secret, '')
+      spn = options.fetch(:spn, {})
+      user_assigned_msi = options.fetch(:user_assigned_msi, {})
+      secret_version = options.fetch(:secret_version, nil)
+
+      raise 'Vault name not provided' if vault.empty? || vault.nil?
+      raise 'Secret name not provided' if secret_name.empty? || secret_name.nil?
 
       vault_url = "https://#{vault}.vault.azure.net"
       if secret_version.nil?
