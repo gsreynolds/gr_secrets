@@ -1,13 +1,12 @@
+<%
+ENV["REGION"] = "eu-west-1"
+ENV["VAULTNAME"] = "#{ENV['USER']}-vault"
+ENV["LOCATION"] = "northeurope"
+ENV["RGNAME"] = "kitchen-#{ENV['USER']}-secrets"
+%>
 ---
 driver:
   name: vagrant
-
-## The forwarded_port port feature lets you connect to ports on the VM guest via
-## localhost on the host.
-## see also: https://www.vagrantup.com/docs/networking/forwarded_ports.html
-
-#  network:
-#    - ["forwarded_port", {guest: 80, host: 8080}]
 
 provisioner:
   name: chef_zero
@@ -21,12 +20,93 @@ provisioner:
 verifier:
   name: inspec
 
-platforms:
-  - name: ubuntu-18.04
+transport:
+  ssh_key: <%= ENV["SSH_KEY"] %>
 
+platforms:
+  - name: azure-ubuntu-18.04
+    driver:
+      name: azurerm
+      explicit_resource_group_name: kitchen-<%= ENV['USER'] %>-secrets
+      vm_tags:
+        X-Contact: <%= ENV['USER'] %>
+        X-Application: "Test-Kitchen"
+        X-Customer: "Test-Kitchen"
+        X-Project: "Test-Kitchen"
+        X-TTL: "4"
+        ostype: linux
+        distro: ubuntu
+      subscription_id: <%= ENV["AZURE_SUBSCRIPTION_ID"] %>
+      location: 'North Europe'
+      machine_size: 'Standard_D2s_v3'
+      image_urn: Canonical:UbuntuServer:18.04-LTS:latest
+      system_assigned_identity: true
+  - name: aws-ubuntu-18.04
+    driver:
+      name: ec2
+      region: eu-west-1
+      instance_type: t2.xlarge
+      shared_credentials_profile: <%= ENV['AWS_PROFILE'] %>
+      iam_profile_name: sm-access-profile
+      tags:
+        X-Contact: <%= ENV['USER'] %>
+        X-Application: "Test-Kitchen"
+        X-Customer: "Test-Kitchen"
+        X-Project: "Test-Kitchen"
+        X-TTL: '4'
 suites:
-  - name: default
+  - name: keyvault
+    includes:
+      - azure-ubuntu-18.04
+    provisioner:
+      named_run_list: azure
+    attributes:
+      secrets_test:
+        vault: <%= ENV["VAULTNAME"] %>
+    driver:
+      vm_name: xenial-vm
+    lifecycle:
+      pre_create:
+        - echo <%= ENV["RGNAME"] %>
+        - echo <%= ENV["LOCATION"] %>
+        - echo <%= ENV["VAULTNAME"] %>
+        - az group create -n <%= ENV["RGNAME"] %> -l <%= ENV["LOCATION"] %>
+        - az provider register -n Microsoft.KeyVault
+        - az keyvault create --name <%= ENV["VAULTNAME"] %> --resource-group <%= ENV["RGNAME"] %> --location <%= ENV["LOCATION"] %>
+        - az keyvault secret set --vault-name <%= ENV["VAULTNAME"] %> --name "test-secret" --value "test1234"
+      post_create:
+        - az keyvault set-policy --name <%= ENV["VAULTNAME"] %> --resource-group <%= ENV["RGNAME"] %> --secret-permissions get list --object-id $(az vm identity show -g <%= ENV["RGNAME"] %> -n xenial-vm | jq -r '.principalId')
+        - remote: sudo apt update && sudo apt install -y build-essential
     verifier:
       inspec_tests:
         - test/integration/default
+
+  - name: secretsmanager
+    includes:
+      - aws-ubuntu-18.04
+    provisioner:
+      named_run_list: aws
     attributes:
+      secrets_test:
+        region: <%= ENV["REGION"] %>
+    lifecycle:
+      pre_create:
+      - echo <%= ENV["REGION"] %>
+      - aws secretsmanager create-secret --region <%= ENV["REGION"] %> --name test-secret --secret-string test1234
+      - aws iam create-role --role-name secrets_role --assume-role-policy-document file://ec2-role-trust-policy.json
+      - aws iam put-role-policy --role-name secrets_role --policy-name SM-Permissions --policy-document file://ec2-role-access-policy.json
+      - aws iam create-instance-profile --instance-profile-name sm-access-profile
+      - aws iam add-role-to-instance-profile --instance-profile-name sm-access-profile --role-name secrets_role
+      # - sleep 10
+      post_create:
+      - remote: sudo apt update && sudo apt install -y build-essential
+      post_destroy:
+      - aws secretsmanager delete-secret --region <%= ENV["REGION"] %> --secret-id test-secret --force-delete-without-recovery
+      - aws iam delete-role-policy --role-name secrets_role --policy-name SM-Permissions
+      - aws iam remove-role-from-instance-profile --instance-profile-name sm-access-profile --role-name secrets_role
+      - aws iam delete-instance-profile --instance-profile-name sm-access-profile
+      - aws iam delete-role --role-name secrets_role
+      # - sleep 10
+    verifier:
+      inspec_tests:
+        - test/integration/default
