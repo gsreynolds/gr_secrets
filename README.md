@@ -56,12 +56,6 @@ end
 This helper will allow you to retrieve a secret from AWS Secrets Manager. It assumes the EC2 instance has an IAM instance profile that allows it access.
 
 ```ruby
-spn = {
-  'tenant_id' => '11e34-your-tenant-id-1232',
-  'client_id' => '11e34-your-client-id-1232',
-  'secret' => 'your-client-secret'
-}
-
 # Write the secret to a file:
 file '/etc/config_file' do
   content lazy { "password = #{get_aws_secret(<secret_name>, <region_name>)}" }

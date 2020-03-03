@@ -1,0 +1,6 @@
+{
+  "id": "spn",
+  "tenant_id": "tenant-id-here",
+  "client_id": "client-id-here",
+  "secret": "secret-here"
+}
