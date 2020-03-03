@@ -2,14 +2,14 @@
 
 module Azure
   module KeyVault
-    def akv_get_secret(vault, secret_name, spn = {}, secret_version = nil)
+    def akv_get_secret(vault, secret_name, spn = {}, user_assigned_msi = {}, secret_version = nil)
       require 'azure_key_vault'
 
       vault_url = "https://#{vault}.vault.azure.net"
       if secret_version.nil?
         secret_version = ''
       end
-      token_provider = create_token_credentials(spn)
+      token_provider = create_token_credentials(spn, user_assigned_msi)
       credentials = MsRest::TokenCredentials.new(token_provider)
       client = Azure::KeyVault::V7_0::KeyVaultClient.new(credentials)
       response = client.get_secret(vault_url, secret_name, secret_version).value
@@ -25,12 +25,12 @@ module Azure
       end
     end
 
-    def create_token_credentials(spn)
+    def create_token_credentials(spn, user_assigned_msi = {})
       # We assume use MSI if spn is empty.
       # We define the port because we get a var deprecation error if not defined.
       if spn.nil? || spn.empty?
         @token_provider ||= begin
-          MsRestAzure::MSITokenProvider.new('50342', token_audience)
+          MsRestAzure::MSITokenProvider.new(50342, token_audience, user_assigned_msi)
         end
       else
         validate_service_principal!(spn)
