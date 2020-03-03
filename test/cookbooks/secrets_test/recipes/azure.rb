@@ -10,10 +10,9 @@ file '/etc/config_file' do
 end
 
 # # Using a user-assigned managed identity that is permitted access to the Key Vault, added to the VM
-# # user_assigned_msi = { 'client_id': '551c07b7-10f5-4623-bfa2-2b4ff6e6ba05' }
-# user_assigned_msi = { 'object_id': 'e0af322e-87ef-4631-addf-c1e65b50293e' }
+# msi_data_bag = data_bag_item('azure_key_vault', 'msi_encrypted')
 # file '/etc/config_file_user_assigned_msi' do
-#   content lazy { "password = #{akv_get_secret(vault: vault, secret: secret, user_assigned_msi: user_assigned_msi)}" }
+#   content lazy { "password = #{akv_get_secret(vault: vault, secret: secret, user_assigned_msi: msi_data_bag)}" }
 # end
 
 # # Use a service principal, that has been permitted access to the Key Vault
@@ -25,5 +24,5 @@ end
 
 # # Write the secret to a file:
 # file '/etc/config_file_spn' do
-#   content lazy { "password = #{akv_get_secret(vault: vault, secret: secret, spn: spn_data_bag.to_h)}" }
+#   content lazy { "password = #{akv_get_secret(vault: vault, secret: secret, spn: spn_data_bag)}" }
 # end

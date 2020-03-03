@@ -7,8 +7,8 @@ module Azure
 
       vault = options.fetch(:vault, '')
       secret_name = options.fetch(:secret, '')
-      spn = options.fetch(:spn, {})
-      user_assigned_msi = options.fetch(:user_assigned_msi, {})
+      spn = coerce_hash(options.fetch(:spn, {}))
+      user_assigned_msi = coerce_hash(options.fetch(:user_assigned_msi, {}))
       secret_version = options.fetch(:secret_version, nil)
 
       raise 'Vault name not provided' if vault.empty? || vault.nil?
@@ -34,7 +34,7 @@ module Azure
       end
     end
 
-    def create_token_credentials(spn, user_assigned_msi = {})
+    def create_token_credentials(spn, user_assigned_msi)
       # We assume use MSI if spn is empty.
       # We define the port because we get a var deprecation error if not defined.
       if spn.nil? || spn.empty?
@@ -57,6 +57,12 @@ module Azure
       spn['client_id'] ||= ENV['AZURE_CLIENT_ID']
       spn['secret'] ||= ENV['AZURE_CLIENT_SECRET']
       raise 'Invalid SPN info provided' unless spn['tenant_id'] && spn['client_id'] && spn['secret']
+    end
+
+    def coerce_hash(hash)
+      # Coerce the provided hash to a mash, and also remove any key named id in the case where a full data bag item has been passed
+      # msi_token_provider.rb in the ms_rest_azure gem will error if the msi hash is of length > 1
+      Mash.from_hash(hash.to_h).reject { |k, _v| k == 'id' }
     end
   end
 end

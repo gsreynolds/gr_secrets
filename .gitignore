@@ -21,4 +21,4 @@ Berksfile.lock
 .zero-knife.rb
 Policyfile.lock.json
 encrypted_data_bag_secret
-spn_encrypted.json
+*_encrypted.json
