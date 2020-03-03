@@ -6,7 +6,8 @@ description 'Installs/Configures gr_secrets'
 version '0.1.0'
 chef_version '>= 14.0'
 
-gem 'azure_key_vault'
+depends 'azure_keyvault'
+
 gem 'aws-sdk-secretsmanager'
 
 issues_url 'https://github.com/gsreynolds/gr_secrets/issues'
