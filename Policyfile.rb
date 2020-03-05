@@ -17,4 +17,4 @@ named_run_list :aws, 'secrets_test::aws'
 # Specify a custom source for a single cookbook:
 cookbook 'secrets_test', path: './test/cookbooks/secrets_test'
 cookbook 'gr_secrets', path: '.'
-cookbook 'azure_keyvault', github: 'gsreynolds/azure_keyvault'
+cookbook 'azure_keyvault', github: 'gsreynolds/azure_keyvault', tag: 'v0.5.1'
