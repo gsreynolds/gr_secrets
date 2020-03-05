@@ -90,7 +90,6 @@ suites:
         - az vm identity assign -g <%= ENV["RGNAME"] %> -n xenial-vm --identities $(az identity show --name <%= ENV["VAULTNAME"] %>-identity --resource-group <%= ENV["RGNAME"] %> | jq -r '.id')
         # Grant the VM system-assigned managed identity access to the vault
         - az keyvault set-policy --name <%= ENV["VAULTNAME"] %> --resource-group <%= ENV["RGNAME"] %> --secret-permissions get list --object-id $(az vm identity show -g <%= ENV["RGNAME"] %> -n xenial-vm | jq -r '.principalId')
-        - remote: export DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install -y build-essential
     verifier:
       inspec_tests:
         - test/integration/default

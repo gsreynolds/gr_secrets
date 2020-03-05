@@ -1,8 +1,9 @@
-# https://docs.microsoft.com/en-gb/azure/active-directory/managed-identities-azure-resources/overview
+include_recipe 'azure_keyvault::default'
 
 vault = node['secrets_test']['vault']
 secret = 'test-secret'
 
+# https://docs.microsoft.com/en-gb/azure/active-directory/managed-identities-azure-resources/overview
 # Using the system-assigned managed identity for the VM, that has been permitted access to the Key Vault
 # Write the secret to a file:
 file '/etc/config_file' do
