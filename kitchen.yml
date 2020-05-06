@@ -42,8 +42,9 @@ platforms:
       machine_size: 'Standard_D2s_v3'
       image_urn: Canonical:UbuntuServer:18.04-LTS:latest
       system_assigned_identity: true
-      # user_assigned_identities:
-      #   - <%= `az identity show --name $VAULTNAME-identity --resource-group $RGNAME| jq -r '.id'` %>
+      user_assigned_identities:
+        - <%= `az identity show --name #{ENV["VAULTNAME"]}-identity --resource-group #{ENV["RGNAME"]} | jq -r '.id'` %>
+
   - name: aws-ubuntu-18.04
     driver:
       name: ec2
@@ -77,7 +78,7 @@ suites:
         - az group create -n <%= ENV["RGNAME"] %> -l <%= ENV["LOCATION"] %>
         # Create a key vault and create a secret in the vault
         - az provider register -n Microsoft.KeyVault
-        - az keyvault create --name <%= ENV["VAULTNAME"] %> --resource-group <%= ENV["RGNAME"] %> --location <%= ENV["LOCATION"] %>
+        - az keyvault create --name <%= ENV["VAULTNAME"] %> --resource-group <%= ENV["RGNAME"] %> --location <%= ENV["LOCATION"] %> --enable-soft-delete
         - az keyvault secret set --vault-name <%= ENV["VAULTNAME"] %> --name "test-secret" --value "test1234"
         # Create a user-assigned managed identity
         - az identity create -g <%= ENV["RGNAME"] %> -n <%= ENV["VAULTNAME"] %>-identity
@@ -87,7 +88,7 @@ suites:
         - az keyvault set-policy --name <%= ENV["VAULTNAME"] %> --resource-group <%= ENV["RGNAME"] %> --secret-permissions get list --object-id $(az ad sp list --display-name "<%= ENV["SPN_NAME"] %>" | jq -r '. | first | .objectId')
       post_create:
         # Add the user-assigned managed identity to the VM
-        - az vm identity assign -g <%= ENV["RGNAME"] %> -n xenial-vm --identities $(az identity show --name <%= ENV["VAULTNAME"] %>-identity --resource-group <%= ENV["RGNAME"] %> | jq -r '.id')
+        # - az vm identity assign -g <%= ENV["RGNAME"] %> -n xenial-vm --identities $(az identity show --name <%= ENV["VAULTNAME"] %>-identity --resource-group <%= ENV["RGNAME"] %> | jq -r '.id')
         # Grant the VM system-assigned managed identity access to the vault
         - az keyvault set-policy --name <%= ENV["VAULTNAME"] %> --resource-group <%= ENV["RGNAME"] %> --secret-permissions get list --object-id $(az vm identity show -g <%= ENV["RGNAME"] %> -n xenial-vm | jq -r '.principalId')
     verifier:
